@@ -4,7 +4,7 @@ from selenium import webdriver
 import random
 import requests
 from com.tools.verificationcode.tensorflowTools.Tensorflow import getResultByName
-
+import os
 
 class zhihui():
     header = {
@@ -248,7 +248,8 @@ class zhihui():
             return self.viewDirectory(currCourseOpenId, currOpenClassId, curCellId, flag, currModuleId)
         else:
             print('未知错误错误码：',info)
-            exit()
+            os.system('pause')
+            #exit()
 
     # 上传进度的方法
     def stuProcessCellLog(self, courseOpenId, openClassId, cellId, cellLogId, token, studyNewlyTime):

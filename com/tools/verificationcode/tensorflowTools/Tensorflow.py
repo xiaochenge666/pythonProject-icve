@@ -2,7 +2,6 @@
 import numpy as np
 import tensorflow as tf
 from PIL import Image
-
 from com.tools.parameter.parm import Model_PATH
 from com.tools.verificationcode.tensorflowTools.gray import getverify
 

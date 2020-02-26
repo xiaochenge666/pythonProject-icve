@@ -1,5 +1,6 @@
 # created by XiaoChenGe 禁止商业用途 如有问题联系QQ:1430986978
 from PIL import Image
+import numpy
 
 #二值化
 threshold = 140
