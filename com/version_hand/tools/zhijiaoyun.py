@@ -5,7 +5,7 @@ import random
 import requests
 
 import os
-from Include.com.tools.gray import *
+from com.version_hand.tools.gray import *
 class zhihui():
     header = {
         'Origin': 'https://mooc.icve.com.cn',

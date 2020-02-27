@@ -1,4 +1,4 @@
-from Include.com.tools.zhijiaoyun import *
+from com.version_hand.tools.zhijiaoyun import *
 
 
 def init():

@@ -1,4 +1,4 @@
-from com.tools.zhijiaoyun import *
+from com.version_auto_auth.tools.zhijiaoyun import *
 def init():
     z = zhihui()
     username = input("请输入用户名：")

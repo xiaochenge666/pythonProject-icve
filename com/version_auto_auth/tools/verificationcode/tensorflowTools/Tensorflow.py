@@ -2,8 +2,8 @@
 import numpy as np
 import tensorflow as tf
 from PIL import Image
-from com.tools.parameter.parm import Model_PATH
-from com.tools.verificationcode.tensorflowTools.gray import getverify
+from com.version_auto_auth.tools.parameter.parm import Model_PATH
+from com.version_auto_auth.tools.verificationcode.tensorflowTools.gray import getverify
 
 number = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 SAVE_PATH = Model_PATH

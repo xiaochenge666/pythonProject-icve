@@ -4,3 +4,4 @@ pip-s*
 pyvenv.cfg
 __pycache__
 interpireter
+VirtualenvEnvironment/

@@ -3,7 +3,7 @@ import time
 from selenium import webdriver
 import random
 import requests
-from com.tools.verificationcode.tensorflowTools.Tensorflow import getResultByName
+from com.version_auto_auth.tools.verificationcode.tensorflowTools.Tensorflow import getResultByName
 import os
 
 class zhihui():

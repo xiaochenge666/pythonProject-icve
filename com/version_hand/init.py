@@ -1,2 +1,1 @@
-from Include.com.tools import main
-main.init()
+from com.version_hand.tools import mainmain.init()
