@@ -2,11 +2,11 @@
 import numpy as np
 import tensorflow as tf
 from PIL import Image
-from com.version_auto_auth.tools.parameter.parm import Model_PATH
+from com.version_auto_auth.tools.parameter.parm import Model_PATH,Model_PATH_DEV
 from com.version_auto_auth.tools.verificationcode.tensorflowTools.gray import getverify
 
 number = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-SAVE_PATH = Model_PATH
+SAVE_PATH = Model_PATH_DEV
 CHAR_SET = number
 CHAR_SET_LEN = len(CHAR_SET)
 IMAGE_HEIGHT = 41

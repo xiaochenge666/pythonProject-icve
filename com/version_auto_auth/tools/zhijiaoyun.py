@@ -1,10 +1,12 @@
 import json
+import sys
 import time
 from selenium import webdriver
 import random
 import requests
 from com.version_auto_auth.tools.verificationcode.tensorflowTools.Tensorflow import getResultByName
 import os
+
 
 class zhihui():
     header = {
@@ -125,9 +127,11 @@ class zhihui():
         courseList = info['courseList']
         print("您当前账号中的所有课程：")
         for i in courseList:
-            courseList = {'courseName': i['courseName'], 'courseOpenId': i['courseOpenId'], 'openClassId': i['openClassId'],
-                    'process': i['process'], 'totalScore': i['totalScore'], 'assistTeacherName': i['assistTeacherName'],
-                    'isComment': isCommect, 'c': c, 'q': q, 'cr': cr, 'w': w}
+            courseList = {'courseName': i['courseName'], 'courseOpenId': i['courseOpenId'],
+                          'openClassId': i['openClassId'],
+                          'process': i['process'], 'totalScore': i['totalScore'],
+                          'assistTeacherName': i['assistTeacherName'],
+                          'isComment': isCommect, 'c': c, 'q': q, 'cr': cr, 'w': w}
             print(i['courseName'])
             Coures[i['courseName']] = courseList
         return Coures
@@ -247,9 +251,9 @@ class zhihui():
             self.continueStudy(currCourseOpenId, currOpenClassId, curCellId, currCellName, currModuleId)
             return self.viewDirectory(currCourseOpenId, currOpenClassId, curCellId, flag, currModuleId)
         else:
-            print('未知错误错误码：',info)
+            print('未知错误错误码：', info)
             os.system('pause')
-            #exit()
+            # exit()
 
     # 上传进度的方法
     def stuProcessCellLog(self, courseOpenId, openClassId, cellId, cellLogId, token, studyNewlyTime):
@@ -311,14 +315,196 @@ class zhihui():
     def zjyUserOnlineTimeRedis(self, userId, userName, userDisplayName):
         list = []  # 储存moduleId 日志
         url = 'https://dm.icve.com.cn/ZjyLogsManage/zjyUserOnlineTimeRedis'
-        date1 = {}
-        date1['userId'] = userId
-        date1['userName'] = userName
-        date1['userDisplayName'] = userDisplayName
+        date1 = {'userId': userId, 'userName': userName, 'userDisplayName': userDisplayName}
         req = self.session.post(url, date1)
         # 将读到的信息转换成json对象并写入到一个文件中
         info = json.loads(req.text)
         # print(info)
+
+    # 选课
+    def addCourse(self):
+        url = 'https://zjy2.icve.com.cn/student/courseCenter/saveClass'
+        data = {
+            'courseOpenId': 'jdragyrir9flsp3c1zq9q',
+            'openClassId': 'ur7sagyrh51fq2dn1zvznq'
+        }
+        res = self.session.post(url, data)
+        res = json.loads(res.text)
+        print(res['msg'])
+
+    # 退课
+    def quitCourse(self):
+        url = 'https://zjy2.icve.com.cn/student/courseCenter/quitOpenClass'
+        data = {
+            'courseOpenId': 'jdragyrir9flsp3c1zq9q',
+            'openClassId': 'ur7sagyrh51fq2dn1zvznq',
+            'termId': 'upepap2qvyviahtkhtodyw'
+        }
+        res = self.session.post(url, data)
+        res = json.loads(res.text)
+        print(res)
+
+
+    # 通过课程名获取courseOpenId, openClassId,termList
+    def getCOiD(self, cname):
+        courseListDic = {}
+        url = 'https://zjy2.icve.com.cn/student/learning/getLearnningCourseList'
+        res = self.session.post(url)
+        res = json.loads(res.text)
+        for _ in res['courseList']:
+            courseListDic[str(_['courseName'])] = {'courseOpenId': _['courseOpenId'], 'openClassId': _['openClassId']}
+
+        print(courseListDic)
+        c = courseListDic[str(cname)]
+        return c['courseOpenId'], c['openClassId'], res['termList']
+
+        # 获取指定课名的作业
+
+    #平时作业
+    def getHomeWorkList(self, courseOpenId, openClassId):
+        url = 'https://zjy2.icve.com.cn/study/homework/getHomeworkList'
+        data = {
+            'courseOpenId': courseOpenId,
+            'openClassId': openClassId,
+            'pageSize': 1000
+        }
+        res = self.session.post(url, data)
+        res = json.loads(res.text)
+        openClassType = res['openClassType']
+        homework_list = []
+        for i in res['list']:
+            item = {
+                'homeworkTermTimeId': i['homeworkTermTimeId'],
+                'homeworkId': i['Id'],
+                'courseOpenId': data['courseOpenId'],
+                'openClassId': data['openClassId'],
+                'openClassType': openClassType
+            }
+            homework_list.append(item)
+        return homework_list
+    # 查看细节
+    def getDetails(self, homework_list):
+        detailsList = []
+        print('===============================作业列表=====================================')
+        for _ in homework_list:
+            url = 'https://security.zjy2.icve.com.cn/study/homework/detail'
+            data = {
+                'courseOpenId': _['courseOpenId'],
+                'openClassId': _['openClassId'],
+                'homeworkId': _['homeworkId'],
+                'hkTermTimeId': _['homeworkTermTimeId'],
+                'openClassType': _['openClassType'],
+                'viewType': 1
+            }
+            res = self.session.post(url, data)
+            res = json.loads(res.text)
+            detailsList.append(res)
+            print('作业名：', res['homework']['Title'])
+        # print(detailsList)
+        return detailsList
+    # 查看历史记录
+    def docHomeworkHistory(self, details_list):
+        history_list = []
+        for _ in details_list:
+            if _['homeworkStulist']:
+                url = 'https://security.zjy2.icve.com.cn/study/homework/history'
+                data = {
+                    'courseOpenId': _['courseOpenId'],
+                    'homeWorkId': _['homeworkId'],
+                    'activityId': _['activityId'],
+                    'hkTermTimeId': _['hkTermTimeId'],
+                    'studentWorkId': _['homeworkStulist'][0]['Id'],
+                    'faceType': _['faceType']
+                }
+                res = self.session.post(url, data)
+                res = json.loads(res.text)
+                history_list.append(res)
+                # print(res, '\n')
+            else:
+                data = {'code': -1, 'msg': '该作业未完成'}
+                history_list.append(data)
+                print('{code: -1 msg: 该作业未完成! }')
+        return history_list
+    #答案解析
+    def parseAnswer(self, q_list):
+        dic_a = {'0': 'A', '1': 'B', '2': 'C', '3': 'D', '4': 'E', '5': 'F', '6': 'G', '7': 'H', '8': 'I'}
+        dic_b = {'0': 'X', '1': '√'}
+        if q_list:
+            for q in q_list:
+                print("================题目===================")
+                Title = q['Title']
+                print(Title)
+
+                answerList = q['answerList']
+                for _1 in answerList:
+                    print(dic_a[str(_1['SortOrder'])], ' ', _1['Content'])
+
+                Answer = q['Answer']
+                print('正确答案：')
+                if Answer:
+                    if q['questionType'] == 1 or q['questionType'] == 2:  # 单选或多选
+                        for _a in Answer:
+                            print(dic_a[str(_a[0])])
+                    elif q['questionType'] == 5 or q['questionType'] == 6:  # 填空题或问答题
+                        for i, _a in enumerate(Answer):
+                            print('第' + str(i + 1) + '题：', _a)
+                    elif q['questionType'] == 3:  # 填空题或问答题
+                        for i, _a in enumerate(Answer):
+                            print(dic_b[str(_a)])
+                    else:
+                        for _a in Answer:
+                            print(_a)
+                    resultAnalysis = q['resultAnalysis']
+                    print("解析：" + resultAnalysis)
+                else:
+                    print('答案未公布！')
+    #获取答案的数据并解析
+    def parseHomeworkAnswer(self, history_list):
+        for _ in history_list:
+            if _['code'] == 1:
+                self.parseAnswer(_['questions'])
+            else:
+                print('未完成')
+
+    #考试
+    def getExameList(self):
+        url = 'https://zjy2.icve.com.cn/student/myExam/getMyExamList'
+        data = {'unprocessed': 0}
+        res = self.session.post(url, data)
+        res = json.loads(res.text)
+        return res
+    def getExamHistory(self, exam_list):
+        examlist = []
+        if exam_list:
+            for _ in exam_list['list']:
+                courseOpenId = _['courseOpenId']
+                openClassId = _['openClassId']
+                exam_list2 = []
+                for _1 in _['examList']:
+                    if _1['stuOnlineExamId']:
+                        url = 'https://security.zjy2.icve.com.cn/study/onlineExam/history'
+                        data = {
+                            'courseOpenId': courseOpenId,
+                            'openClassId': openClassId,
+                            'stuOnlineExamId': _1['stuOnlineExamId'],
+                            'type': _1['type'],
+                            'viewType': 2
+                        }
+                        res = self.session.post(url, data)
+                        res = json.loads(res.text)
+                        exam_list2.append(res)
+                    else:
+                        exam_list2.append([])
+                        print('无记录')
+                examlist.append(exam_list2)
+        return examlist
+    def parseExamAnswer(self, examhistory_res):
+        if examhistory_res:
+            for _ in examhistory_res:
+                for _1 in _:
+                    print('++++++++++++试卷++++++++++++++++')
+                    if _1:
+                        self.parseAnswer(_1['questions'])
 
     # 开始刷课
     # 基本思路
@@ -423,5 +609,27 @@ class zhihui():
             # self.doFlashComment(cName)
 
 
+class Logger(object):
+    def __init__(self, fileN="Default.log"):
+        self.terminal = sys.stdout
+        self.log = open(fileN, "a")
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
+    def flush(self):
+        pass
+
+
+# sys.stdout = Logger("F:\\源代码\\python_pycharm\\pythonProject-icve\\com\\version_auto_auth\\a.txt")  # 这里我将Log输出到D盘
 if __name__ == '__main__':
+    z = zhihui()
+    z.login_final('081218191', 'sui2001.', 'verificationcode/img/')
+    # c, o, tl = z.getCOiD('天然药物提取与分离')
+    # historyList = z.docHomeworkHistory(
+    # z.getDetails(z.getHomeWorkList(c, o)))
+    # z.parseHomeworkAnswer(historyList)
+    z.parseExamAnswer(z.getExamHistory(z.getExameList()))
+
     pass
