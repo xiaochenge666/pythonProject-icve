@@ -5,3 +5,7 @@ pyvenv.cfg
 __pycache__
 interpireter
 VirtualenvEnvironment/
+build
+dist
+img
+init.spec
