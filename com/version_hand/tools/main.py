@@ -2,9 +2,8 @@ from com.version_hand.tools.zhijiaoyun import *
 
 
 def init():
-    print("\t\t\t\t\t\t小陈鸽网课挂机宝")
-    while (True):
-        print("==============================================================================================\n")
+    print("\t\t\t\t\t小陈鸽网课挂机宝2.0")
+    while True:
         z = zhihui()
         username = input("请输入用户名：\n")
         password = input("请输入密码：\n")
@@ -25,5 +24,4 @@ def init():
             exit()
         except:
             print("异常，请重试！")
-            print("=============================================================================================\n\n")
             os.system("pause")

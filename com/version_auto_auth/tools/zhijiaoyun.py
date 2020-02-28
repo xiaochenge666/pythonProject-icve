@@ -289,14 +289,13 @@ class zhihui():
         return info['code']
 
     # 上传评论的方法
-    def addCellActivity(self, courseOpenId, openClassId, cellId, content, activityType):
-        list = []  # 储存moduleId
+    def addCellActivity(self, courseOpenId, openClassId, cellId, activityType):
         url = 'https://zjy2.icve.com.cn/common/Directory/addCellActivity'
         if activityType != 1:
             star = 0
         else:
             star = random.randint(4, 5)
-
+        content = ''
         if activityType == 1:
             content = random.choice(['好', '灰常好', 'good', '阔以', '1', '0', 'ok'])
         elif activityType == 2:
@@ -330,7 +329,6 @@ class zhihui():
         req = self.session.post(url, date1)
         # 将读到的信息转换成json对象并写入到一个文件中
         info = json.loads(req.text)
-        # print(info)
 
     # 选课
     def addCourse(self):
@@ -576,6 +574,7 @@ class zhihui():
             fls = self.viewDir(_)  # 刷新一次
             if fls['cellPercent'] < 100:
                 while True:
+                    time.sleep(random.randint(0, 6))
                     fls = self.viewDir(_)
                     if fls['cellPercent'] >= 100:
                         break
@@ -600,27 +599,6 @@ class Logger(object):
 if __name__ == '__main__':
     z = zhihui()
     z.login_final('081218191', 'sui2001.', 'verificationcode/img/')
-    # 作业测试
-    # c, o, tl = z.getCOiD('天然药物提取与分离')
-    # historyList = z.docHomeworkHistory(
-    # z.getDetails(z.getHomeWorkList(c, o)))
-    # z.parseHomeworkAnswer(historyList)
-
-    # 考试测试
-    # z.parseExamAnswer(z.getExamHistory(z.getExameList()))
-
-    # test1
-    # p, p2 = z.getLearnningCourseList('中药制剂质量分析')  # p1：所有课程 p2:指定课程名课程信息
-    # print(p2)
-
-    # test2
-    # print(z.getModuleList(p2))
-
-    # test3
-    # print(z.getTopicByModuleId(z.getModuleList(p2)))
-
-    # test4
-    # print(z.getCellByTopicId(z.getTopicByModuleId(z.getModuleList(p2))))
     z.doFlashCourse('中药综合知识与技能')
 
     pass
