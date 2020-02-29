@@ -8,8 +8,8 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
-
+from PyQt5.QtWidgets import QLabel
+from com.version_hand.gui.index_rc import *
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
@@ -124,7 +124,7 @@ class Ui_Form(object):
         font.setPointSize(9)
         self.label_5.setFont(font)
         self.label_5.setObjectName("label_5")
-        self.label_6 = QtWidgets.QLabel(Form)
+        self.label_6 = QLabel(Form)
         self.label_6.setGeometry(QtCore.QRect(169, 146, 121, 42))
         self.label_6.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.label_6.setText("")
@@ -135,7 +135,6 @@ class Ui_Form(object):
 
         self.retranslateUi(Form)
         self.pushButton.clicked.connect(Form.login)
-        self.label_6.linkActivated['QString'].connect(Form.flashCodeView)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
@@ -150,4 +149,3 @@ class Ui_Form(object):
         self.label_5.setText(_translate("Form", "打赏"))
 
 
-from com.version_hand.gui.ui import index_rc

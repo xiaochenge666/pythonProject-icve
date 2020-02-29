@@ -6,7 +6,16 @@ import requests
 
 import os
 from com.version_hand.tools.gray import *
-class zhihui():
+
+from PyQt5.QtCore import pyqtSignal, QObject
+
+
+class zhihui(QObject):
+    sendPer = pyqtSignal(int)
+    sendTotalCell = pyqtSignal(int)
+    sendCurrPage = pyqtSignal(int)
+    # excepttionSg = pyqtSignal(str)
+
     header = {
         'Origin': 'https://mooc.icve.com.cn',
         'Referer': 'https://mooc.icve.com.cn/',
@@ -15,11 +24,12 @@ class zhihui():
     }
 
     def __init__(self):
+        super(zhihui, self).__init__()
         self.session = requests.session()
         self.session.headers.update(self.header)
 
     # 获取验证码并将其保存到本地文件
-    def getVerificationCode(self, user, path='img/'):
+    def getVerificationCode(self, user='local', path='img/'):
         url = 'https://zjy2.icve.com.cn/common/VerifyCode/index?t=0.7494683560082718'
         url1 = "https://zjy2.icve.com.cn/"
         self.session.get(url1)
@@ -38,6 +48,7 @@ class zhihui():
         t1 = getResultByName(str(user), path)
 
         return t1
+
     # 使用selenium处理需要更新的资源
     def update(self, courseOpenId, openClassId, cellId, flag, moduleId, type, user, pwt):
         # 创建对象
@@ -68,6 +79,7 @@ class zhihui():
             time.sleep(2)
         driver.close()
         return 0
+
     # 1.登陆函数，使用户登陆平台并保持登陆状态
     def login(self, username, password, code):
         # 登陆账号保持登陆状态
@@ -88,7 +100,7 @@ class zhihui():
             print("登陆成功！")
             dict = {'code': 1, 'userId': Json['userId'], 'userName': Json['userName'],
                     'displayName': Json['displayName']}
-            print("欢迎"+dict['displayName']+'使用网课挂机包')
+            print("欢迎" + dict['displayName'] + '使用网课挂机包')
             return 1
         elif Json['code'] == -2:
             print("密码错误！")
@@ -100,8 +112,9 @@ class zhihui():
             print(Json['msg'])
             return -16
         else:
-            print('未知错误',Json)
+            print('未知错误', Json)
             return 0
+
     # 封装后的登陆
     def login_final(self, user, pwd, path='tools/verificationcode/img/'):
         for i in range(20):
@@ -128,7 +141,6 @@ class zhihui():
         req = self.session.post(url)
         info = json.loads(req.text)
         courseList = info['courseList']
-        print("您当前账号中的所有课程：")
         for i in courseList:
             courseList = {'courseName': i['courseName'],
                           'courseOpenId': i['courseOpenId'],
@@ -136,7 +148,7 @@ class zhihui():
                           'process': i['process'], 'totalScore': i['totalScore'],
                           'assistTeacherName': i['assistTeacherName']}
             coures_list[i['courseName']] = courseList
-            print(i['courseName'])
+            # print(i['courseName'])
         c = {}
         if cname in coures_list:
             c = coures_list[str(cname)]
@@ -228,6 +240,7 @@ class zhihui():
             for _1 in _:
                 for _2 in _1:
                     all_cell_list.append(_2)
+        self.sendTotalCell.emit(len(all_cell_list))
         return all_cell_list
 
         # 切换成当前课件
@@ -269,9 +282,10 @@ class zhihui():
             self.continueStudy(currCourseOpenId, currOpenClassId, curCellId, currCellName, currModuleId)
             return self.viewDirectory(currCourseOpenId, currOpenClassId, curCellId, flag, currModuleId)
         else:
+            # self.excepttionSg.emit('ww')
             print('未知错误错误码：', info)
-            os.system('pause')
-            exit()
+            # os.system('pause')
+            # exit()
 
     # 上传进度的方法
     def stuProcessCellLog(self, courseOpenId, openClassId, cellId, cellLogId, token, studyNewlyTime):
@@ -291,22 +305,22 @@ class zhihui():
         return info['code']
 
     # 上传评论的方法
-    def addCellActivity(self, courseOpenId, openClassId, cellId, content, activityType):
-        list = []  # 储存moduleId
+    def addCellActivity(self, courseOpenId, openClassId, cellId, activityType, content):
+
         url = 'https://zjy2.icve.com.cn/common/Directory/addCellActivity'
         if activityType != 1:
             star = 0
         else:
             star = random.randint(4, 5)
-
-        if activityType == 1:
-            content = random.choice(['好', '灰常好', 'good', '阔以', '1', '0', 'ok'])
-        elif activityType == 2:
-            content = random.choice(['无', '没有', 'Nothing', '没得', '2', 'none'])
-        elif activityType == 3:
-            content = random.choice(['无', '没有', 'anything', '没得', '1', '0'])
-        elif activityType == 4:
-            content = random.choice(['无', '没有', 'no', '没得', '好', '1', '2'])
+        if not content:
+            if activityType == 1:
+                content = random.choice(['好', '灰常好', 'good', '阔以', '1', '0', 'ok'])
+            elif activityType == 2:
+                content = random.choice(['无', '没有', 'Nothing', '没得', '2', 'none'])
+            elif activityType == 3:
+                content = random.choice(['无', '没有', 'anything', '没得', '1', '0'])
+            elif activityType == 4:
+                content = random.choice(['无', '没有', 'no', '没得', '好', '1', '2'])
 
         date1 = {
             # 'content':'灰常好',#评论的内容
@@ -524,43 +538,47 @@ class zhihui():
                     if _1:
                         self.parseAnswer(_1['questions'])
 
-    def doFlashComment(self, cName):
-        # 开始刷课
-        # 基本思路
-        # 进入目录--》选择课件--》上传进度（若失败则停留11s,在重新上传）--》判断进度是否为100%--》进入下一个课件--》循环
-        # 刷评论
-        c = cName['c']  # 评论问答纠错笔记
-        q = cName['q']
-        cr = cName['cr']
-        w = cName['w']
-        # print('=============换课啦,得courseOpenId，openClassId====================')
-        p = self.getProcessList(cName['courseOpenId'], cName['openClassId'])  # 获取进度
-        for i1 in p:  # 遍历所有的课程名（courseopenid）
-            # pint('-------------------换模块啦，得Topic-----------------------------')
-            m = self.getTopicByModuleId(cName['courseOpenId'], i1['moduleId'])
-            for i2 in m:  # 遍历所有的ModuleId
-                # print("-----------------------换Topic,获取cellID-----------------------------")
-                c = self.getCellByTopicId(cName['courseOpenId'], cName['openClassId'], i2['topicId'])
-                for i3 in c:  # 遍历所有的topicid
-                    # print('-----------------进入viewDirectory模式-----------------------------')
-                    v = self.viewDirectory(cName['courseOpenId'], cName['openClassId'], i3['Id'], 's',
-                                           i1['moduleId'])
-                    for i4 in v:  # 遍历所有的课程目录
-                        self.addCellActivity(cName['courseOpenId'], cName['openClassId'], i3['Id'], '', 1)
-                        self.addCellActivity(cName['courseOpenId'], cName['openClassId'], i3['Id'], '', 2)
-                        self.addCellActivity(cName['courseOpenId'], cName['openClassId'], i3['Id'], '', 3)
-                        self.addCellActivity(cName['courseOpenId'], cName['openClassId'], i3['Id'], '', 4)
-
     def viewDir(self, _):
         fls = self.viewDirectory(courseOpenId=_['courseOpenId'], openClassId=_['openClassId'], cellId=_['Id'],
                                  flag='s', moduleId=_['moduleId'])
         self.stuProcessCellLog(courseOpenId=_['courseOpenId'], openClassId=_['openClassId'],
                                cellId=_['Id'], cellLogId=fls['cellLogId'], token=fls['guIdToken'],
                                studyNewlyTime=fls['audioVideoLong'])
+        self.sendPer.emit(fls['cellPercent'])
         print(fls['cellName'], '进度：', fls['cellPercent'])
         return fls
 
+    # 默认刷课方式：仅开启刷课模式
     def doFlashCourse(self, cname):
+        all_list, one = self.getLearnningCourseList(cname)  # p1：所有课程 p2:指定课程名课程信息
+        module_topic_cell_list = self.getCellByTopicId(self.getTopicByModuleId(self.getModuleList(
+            one)))  # 获取该门课件的所有celld信息；返回数据结构：[moudel[topic[cell[],cell[]..],topic[cell[],cell[]..],...],moudel[]....]
+        all_cell_list = self.getAllCellList(module_topic_cell_list)
+        for _index, _ in enumerate(all_cell_list):
+            print(_index)
+            self.sendCurrPage.emit(_index+1)
+            ######################################################################################
+            #               'audioVideoLong': info['audioVideoLong'],
+            #               'cellName': info['cellName'],             #
+            #               'cellLogId': info['cellLogId'],
+            #               'cellPercent': info['cellPercent'],   #
+            #               'guIdToken': info['guIdToken'],
+            #               'isNeedUpdate': info['isNeedUpdate'], #
+            #               'categoryName': info['categoryName']                                  #
+            ########################################################################################
+            fls = self.viewDir(_)  # 刷新一次
+            if fls['cellPercent'] < 100:
+                while True:
+                    time.sleep(random.randint(10, 11))
+                    fls = self.viewDir(_)
+                    if fls['cellPercent'] >= 100:
+                        break
+                    if fls['isNeedUpdate']:
+                        break
+        return 1
+
+    # 开启高级设置的刷课
+    def doDiyFlashCourse(self, cname, isWantFlCourse=False, speed=10, isWantComment=False, msg=''):
         all_list, one = self.getLearnningCourseList(cname)  # p1：所有课程 p2:指定课程名课程信息
         module_topic_cell_list = self.getCellByTopicId(self.getTopicByModuleId(self.getModuleList(
             one)))  # 获取该门课件的所有celld信息；返回数据结构：[moudel[topic[cell[],cell[]..],topic[cell[],cell[]..],...],moudel[]....]
@@ -576,15 +594,23 @@ class zhihui():
             #               'categoryName': info['categoryName']                                  #
             ########################################################################################
             fls = self.viewDir(_)  # 刷新一次
-            if fls['cellPercent'] < 100:
-                while True:
-                    fls = self.viewDir(_)
-                    if fls['cellPercent'] >= 100:
-                        break
-                    if fls['isNeedUpdate']:
-                        break
+            if isWantFlCourse:
+                if fls['cellPercent'] < 100:
+                    while True:
+                        time.sleep(speed)
+                        fls = self.viewDir(_)
+                        if fls['cellPercent'] >= 100:
+                            break
+                        if fls['isNeedUpdate']:
+                            break
+            if isWantComment:
+                for j in range(1, 4):
+                    time.sleep(speed)
+                    self.addCellActivity(courseOpenId=_['courseOpenId'], openClassId=_['openClassId'], cellId=_['Id'],
+                                         activityType=i, content=msg)
+
+        return 1
 
 
 if __name__ == '__main__':
-
     pass
