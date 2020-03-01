@@ -14,7 +14,7 @@ class zhihui(QObject):
     sendPer = pyqtSignal(int)
     sendTotalCell = pyqtSignal(int)
     sendCurrPage = pyqtSignal(int)
-    # excepttionSg = pyqtSignal(str)
+    excepttionSg = pyqtSignal(str)
 
     header = {
         'Origin': 'https://mooc.icve.com.cn',
@@ -232,15 +232,22 @@ class zhihui(QObject):
 
                     topic_cell_list.append(cell_list)
                 module_topic_cell_list.append(topic_cell_list)
+
             return module_topic_cell_list
 
     def getAllCellList(self, module_topic_cell_list):
+        # 只用添加进度未满100的课件
         all_cell_list = []
         for _ in module_topic_cell_list:
             for _1 in _:
                 for _2 in _1:
-                    all_cell_list.append(_2)
-        self.sendTotalCell.emit(len(all_cell_list))
+                    if _2['stuCellFourPercent'] < 100:
+                        all_cell_list.append(_2)
+        if len(all_cell_list):
+            self.sendTotalCell.emit(len(all_cell_list))
+        else:
+            self.sendTotalCell.emit(100)
+            self.sendCurrPage.emit(100)
         return all_cell_list
 
         # 切换成当前课件
@@ -263,27 +270,31 @@ class zhihui(QObject):
         url = 'https://zjy2.icve.com.cn/common/Directory/viewDirectory'
         date1 = {'courseOpenId': courseOpenId, 'openClassId': openClassId, 'cellId': cellId, 'flag': flag,
                  'moduleId': moduleId}
-        res = self.session.post(url, date1)
-        info = json.loads(res.text)
+        try:
+            res = self.session.post(url, date1)
+            info = json.loads(res.text)
 
-        if info['code'] == 1:
-            course_info = {'audioVideoLong': info['audioVideoLong'], 'cellName': info['cellName'],
-                           'cellLogId': info['cellLogId'], 'cellPercent': info['cellPercent'],
-                           'guIdToken': info['guIdToken'], 'isNeedUpdate': info['isNeedUpdate'],
-                           'categoryName': info['categoryName']}
-            return course_info  # 返回一个数组
-        elif info['code'] == -100:
-            currCourseOpenId = info['currCourseOpenId']
-            currOpenClassId = info['currOpenClassId']
-            currModuleId = info['currModuleId']
-            curCellId = info['curCellId']
-            currCellName = info['currCellName']
-            lastPercent = info['lastPercent']
-            self.continueStudy(currCourseOpenId, currOpenClassId, curCellId, currCellName, currModuleId)
-            return self.viewDirectory(currCourseOpenId, currOpenClassId, curCellId, flag, currModuleId)
-        else:
-            # self.excepttionSg.emit('ww')
-            print('未知错误错误码：', info)
+            if info['code'] == 1:
+                course_info = {'audioVideoLong': info['audioVideoLong'], 'cellName': info['cellName'],
+                               'cellLogId': info['cellLogId'], 'cellPercent': info['cellPercent'],
+                               'guIdToken': info['guIdToken'], 'isNeedUpdate': info['isNeedUpdate'],
+                               'categoryName': info['categoryName']}
+                return course_info  # 返回一个数组
+            elif info['code'] == -100:
+                currCourseOpenId = info['currCourseOpenId']
+                currOpenClassId = info['currOpenClassId']
+                currModuleId = info['currModuleId']
+                curCellId = info['curCellId']
+                currCellName = info['currCellName']
+                lastPercent = info['lastPercent']
+                self.continueStudy(currCourseOpenId, currOpenClassId, curCellId, currCellName, currModuleId)
+                return self.viewDirectory(currCourseOpenId, currOpenClassId, curCellId, flag, currModuleId)
+            else:
+                self.excepttionSg.emit('X_X 阿欧 不好了，我们在处理该课件时，收到了服务器的一个通知，该进程已中断~ 通知内容：'+str(info['msg']))
+                print('未知错误错误码：', info)
+                exec
+        except:
+            print('异常')
             # os.system('pause')
             # exit()
 
@@ -556,7 +567,7 @@ class zhihui(QObject):
         all_cell_list = self.getAllCellList(module_topic_cell_list)
         for _index, _ in enumerate(all_cell_list):
             print(_index)
-            self.sendCurrPage.emit(_index+1)
+            self.sendCurrPage.emit(_index + 1)
             ######################################################################################
             #               'audioVideoLong': info['audioVideoLong'],
             #               'cellName': info['cellName'],             #
@@ -575,6 +586,8 @@ class zhihui(QObject):
                         break
                     if fls['isNeedUpdate']:
                         break
+            else:
+                time.sleep(10)
         return 1
 
     # 开启高级设置的刷课
@@ -583,7 +596,8 @@ class zhihui(QObject):
         module_topic_cell_list = self.getCellByTopicId(self.getTopicByModuleId(self.getModuleList(
             one)))  # 获取该门课件的所有celld信息；返回数据结构：[moudel[topic[cell[],cell[]..],topic[cell[],cell[]..],...],moudel[]....]
         all_cell_list = self.getAllCellList(module_topic_cell_list)
-        for _ in all_cell_list:
+        for _index, _ in enumerate(all_cell_list):
+            self.sendCurrPage.emit(_index + 1)
             ######################################################################################
             #               'audioVideoLong': info['audioVideoLong'],
             #               'cellName': info['cellName'],             #
@@ -603,14 +617,42 @@ class zhihui(QObject):
                             break
                         if fls['isNeedUpdate']:
                             break
+            else:
+                time.sleep(speed)
+
             if isWantComment:
+                time.sleep(speed)
                 for j in range(1, 4):
-                    time.sleep(speed)
+                    time.sleep(1)
                     self.addCellActivity(courseOpenId=_['courseOpenId'], openClassId=_['openClassId'], cellId=_['Id'],
                                          activityType=i, content=msg)
 
         return 1
 
 
+
 if __name__ == '__main__':
+    z = zhihui()
+    username = '1227947691'
+    password = 'zfz999107.'
+    try:
+        z.getVerificationCode(username)
+        code = input("输入验证码:\n")
+        z.login(username, password, code)
+        print('\n请手动关闭验证码窗口在继续....')
+        os.system("pause")
+        CourseList = z.getLearnningCourseList()
+        for i in range(3):
+            print("\t\t\t\ttips:为了保证不出错直接复制上边的课程名！")
+        courseName = input("请输入课程名：\n")
+        print('\n开始挂机中,请勿关闭此窗口.....')
+        z.doFlashBody(CourseList[str(courseName)])
+        print("刷课完毕,按任意键退出.....\n")
+        os.system("pause")
+        exit()
+    except:
+        print("异常，请重试！")
+        print("=============================================================================================\n\n")
+        os.system("pause")
+
     pass
