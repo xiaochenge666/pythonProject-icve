@@ -139,7 +139,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "小陈鸽网课小助手QQ1430986978"))
+        Form.setWindowTitle(_translate("Form", "小陈鸽网课小助手QQ522471064"))
         self.label.setText(_translate("Form", "账号："))
         self.label_2.setText(_translate("Form", "密码："))
         self.lineEdit.setPlaceholderText(_translate("Form", "请输入职教云账号"))

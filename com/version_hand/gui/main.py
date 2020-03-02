@@ -1,5 +1,4 @@
-import sys
-
+import pygame
 from PyQt5.QtCore import QThread, pyqtSignal
 from com.version_hand.gui.zhijiaoui import *
 from com.version_hand.gui.loginui import *
@@ -7,6 +6,20 @@ from com.version_hand.gui.tpis import *
 from com.version_hand.tools.zhijiaoyun import *
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDialog
 from PyQt5.QtGui import *
+import sys
+import os
+
+
+# 生成资源文件目录访问路径
+def resource_path(relative_path):
+    if getattr(sys, 'frozen', False):  # 是否Bundle Resource
+        base_path = sys._MEIPASS
+    else:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+
+filename = resource_path(os.path.join("img", "music.mp3"))
 
 z = zhihui()  # 职教云对象
 
@@ -276,6 +289,10 @@ if __name__ == '__main__':
     LoginPage = MyLogin()
     MainPage = MyMain()
     tips = Tips()
+    pygame.mixer.init()
+    track = pygame.mixer.music.load(filename)
+    print(filename)
+    pygame.mixer.music.play(-1)
 
     # ···············登陆页面信号······················
     # 登陆失败

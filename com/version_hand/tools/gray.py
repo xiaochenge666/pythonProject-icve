@@ -3,8 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 import threading
-import inspect
-import ctypes
+
+
 
 # 二值化
 threshold = 140
